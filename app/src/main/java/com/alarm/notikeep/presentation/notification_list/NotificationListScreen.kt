@@ -31,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,16 +40,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.alarm.notikeep.domain.model.NotificationItem
-import com.alarm.notikeep.presentation.permission.PermissionScreen
 import com.alarm.notikeep.presentation.theme.AccentBlue
 import com.alarm.notikeep.presentation.theme.BackgroundGray
 import com.alarm.notikeep.presentation.theme.Gray300
@@ -65,35 +60,13 @@ import com.alarm.notikeep.util.DateTimeUtil
 
 @Composable
 fun NotificationListScreen(
-    viewModel: NotificationListViewModel = hiltViewModel(),
-    onAppExit: () -> Unit
+    viewModel: NotificationListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.checkPermission()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
-    if (!uiState.hasNotificationPermission) {
-        PermissionScreen(
-            onRequestPermission = { viewModel.requestPermission() },
-            onAppExit = onAppExit
-        )
-    } else {
-        NotificationListContent(
-            notifications = uiState.notifications,
-            isLoading = uiState.isLoading
-        )
-    }
+    NotificationListContent(
+        notifications = uiState.notifications,
+        isLoading = uiState.isLoading
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

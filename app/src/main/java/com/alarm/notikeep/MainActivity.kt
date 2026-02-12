@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Surface
-import com.alarm.notikeep.presentation.notification_list.NotificationListScreen
+import com.alarm.notikeep.presentation.navigation.NotiKeepNavHost
 import com.alarm.notikeep.presentation.theme.NotiKeepTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             NotiKeepTheme {
                 Surface {
-                    NotificationListScreen(
+                    NotiKeepNavHost(
                         onAppExit = { finish() }
                     )
                 }
