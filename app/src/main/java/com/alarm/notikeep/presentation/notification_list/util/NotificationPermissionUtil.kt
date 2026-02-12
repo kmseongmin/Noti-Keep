@@ -1,4 +1,4 @@
-package com.alarm.notikeep.util
+package com.alarm.notikeep.presentation.notification_list.util
 
 import android.content.Context
 import android.content.Intent
