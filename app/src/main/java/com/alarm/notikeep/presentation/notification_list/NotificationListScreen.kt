@@ -26,19 +26,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alarm.notikeep.domain.model.NotificationItem
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.alarm.notikeep.util.DateTimeUtil
 
 @Composable
 fun NotificationListScreen(
     viewModel: NotificationListViewModel = hiltViewModel()
 ) {
-    val notifications by viewModel.notifications.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
+    NotificationListContent(
+        notifications = uiState.notifications,
+        isLoading = uiState.isLoading
+    )
+}
+
+@Composable
+fun NotificationListContent(
+    notifications: List<NotificationItem>,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         topBar = {
             Column(
@@ -135,7 +146,7 @@ fun NotificationItemCard(
                 }
 
                 Text(
-                    text = formatTimestamp(notification.timestamp),
+                    text = DateTimeUtil.formatTimestamp(notification.timestamp),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp)
@@ -145,7 +156,58 @@ fun NotificationItemCard(
     }
 }
 
-private fun formatTimestamp(timestamp: Long): String {
-    val sdf = SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault())
-    return sdf.format(Date(timestamp))
+@Preview(showBackground = true)
+@Composable
+fun NotificationListContentPreview() {
+    MaterialTheme {
+        NotificationListContent(
+            notifications = listOf(
+                NotificationItem(
+                    id = 1,
+                    packageName = "com.example.app",
+                    appName = "Example App",
+                    title = "Test Notification",
+                    content = "This is a test notification content",
+                    timestamp = System.currentTimeMillis()
+                ),
+                NotificationItem(
+                    id = 2,
+                    packageName = "com.example.messenger",
+                    appName = "Messenger",
+                    title = "New Message",
+                    content = "You have received a new message from John",
+                    timestamp = System.currentTimeMillis() - 3600000
+                )
+            ),
+            isLoading = false
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun NotificationListContentEmptyPreview() {
+    MaterialTheme {
+        NotificationListContent(
+            notifications = emptyList(),
+            isLoading = false
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun NotificationItemCardPreview() {
+    MaterialTheme {
+        NotificationItemCard(
+            notification = NotificationItem(
+                id = 1,
+                packageName = "com.example.app",
+                appName = "Example App",
+                title = "Test Notification",
+                content = "This is a test notification content with a longer text to see how it looks when it wraps to multiple lines",
+                timestamp = System.currentTimeMillis()
+            )
+        )
+    }
 }
