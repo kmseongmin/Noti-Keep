@@ -8,4 +8,11 @@ sealed interface NotiKeepNavRoute {
 
     @Serializable
     data object NotificationList : NotiKeepNavRoute
+
+    @Serializable
+    data class NotificationGroupDetail(
+        val packageName: String,
+        val threadKey: String,
+        val title: String? = null
+    ) : NotiKeepNavRoute
 }

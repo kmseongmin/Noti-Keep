@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NotificationDao {
+    // NotificationRepositoryImpl.saveNotification()에서 최종 저장에 사용.
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(notification: NotificationEntity)
 
@@ -23,6 +24,9 @@ interface NotificationDao {
 
     @Query("DELETE FROM notifications WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("UPDATE notifications SET isRead = 1 WHERE id IN (:ids) AND isRead = 0")
+    suspend fun markAsReadByIds(ids: List<Long>)
 
     @Query("DELETE FROM notifications")
     suspend fun deleteAll()
