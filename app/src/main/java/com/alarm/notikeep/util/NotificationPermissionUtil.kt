@@ -3,7 +3,6 @@ package com.alarm.notikeep.util
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import androidx.core.app.NotificationManagerCompat
 
 object NotificationPermissionUtil {
 
@@ -17,8 +16,13 @@ object NotificationPermissionUtil {
     }
 
     fun openNotificationListenerSettings(context: Context) {
-        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            putExtra(":settings:fragment_args_key", context.packageName)
+            putExtra(":settings:show_fragment_args", android.os.Bundle().apply {
+                putString("package", context.packageName)
+            })
+        }
         context.startActivity(intent)
     }
 }

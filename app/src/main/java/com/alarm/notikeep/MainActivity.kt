@@ -17,7 +17,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             NotiKeepTheme {
                 Surface {
-                    NotificationListScreen()
+                    NotificationListScreen(
+                        onAppExit = { finish() }
+                    )
                 }
             }
         }

@@ -38,7 +38,7 @@ import com.alarm.notikeep.presentation.theme.SkyBlueLight
 @Composable
 fun PermissionScreen(
     onRequestPermission: () -> Unit,
-    onCheckPermission: () -> Unit,
+    onAppExit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -111,11 +111,11 @@ fun PermissionScreen(
                     )
                     PermissionStep(
                         number = "2",
-                        text = "NotiKeep 찾아서 활성화"
+                        text = "NotiKeep을 활성화"
                     )
                     PermissionStep(
                         number = "3",
-                        text = "뒤로가기로 앱으로 돌아오기"
+                        text = "뒤로가기로 자동 복귀"
                     )
                 }
             }
@@ -140,17 +140,17 @@ fun PermissionScreen(
             }
 
             OutlinedButton(
-                onClick = onCheckPermission,
+                onClick = onAppExit,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = SkyBlue
+                    contentColor = Color.Gray
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "권한 설정 완료",
+                    text = "나중에 하기",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -188,7 +188,7 @@ fun PermissionScreenPreview() {
     MaterialTheme {
         PermissionScreen(
             onRequestPermission = {},
-            onCheckPermission = {}
+            onAppExit = {}
         )
     }
 }

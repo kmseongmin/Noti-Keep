@@ -56,7 +56,8 @@ import com.alarm.notikeep.util.DateTimeUtil
 
 @Composable
 fun NotificationListScreen(
-    viewModel: NotificationListViewModel = hiltViewModel()
+    viewModel: NotificationListViewModel = hiltViewModel(),
+    onAppExit: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -76,7 +77,7 @@ fun NotificationListScreen(
     if (!uiState.hasNotificationPermission) {
         PermissionScreen(
             onRequestPermission = { viewModel.requestPermission() },
-            onCheckPermission = { viewModel.checkPermission() }
+            onAppExit = onAppExit
         )
     } else {
         NotificationListContent(
