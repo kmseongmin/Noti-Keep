@@ -3,6 +3,7 @@ package com.alarm.notikeep.presentation.notification_list
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -44,14 +46,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.alarm.notikeep.domain.model.NotificationItem
 import com.alarm.notikeep.presentation.permission.PermissionScreen
+import com.alarm.notikeep.presentation.theme.AccentBlue
+import com.alarm.notikeep.presentation.theme.BackgroundGray
+import com.alarm.notikeep.presentation.theme.Gray300
+import com.alarm.notikeep.presentation.theme.Gray500
+import com.alarm.notikeep.presentation.theme.Gray700
 import com.alarm.notikeep.presentation.theme.SkyBlue
 import com.alarm.notikeep.presentation.theme.SkyBlueDark
 import com.alarm.notikeep.presentation.theme.SkyBlueLight
+import com.alarm.notikeep.presentation.theme.SkyBlueMedium
 import com.alarm.notikeep.util.DateTimeUtil
 
 @Composable
@@ -102,15 +111,28 @@ fun NotificationListContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "NotiKeep",
-                            tint = Color.White
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(
+                                    color = Color.White.copy(alpha = 0.2f),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "NotiKeep",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                         Text(
                             text = "NotiKeep",
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            fontSize = 22.sp,
+                            color = Color.White,
+                            letterSpacing = 0.5.sp
                         )
                     }
                 },
@@ -119,7 +141,7 @@ fun NotificationListContent(
                 )
             )
         },
-        containerColor = SkyBlueLight.copy(alpha = 0.3f)
+        containerColor = BackgroundGray
     ) { paddingValues ->
         if (notifications.isEmpty()) {
             Box(
@@ -130,18 +152,40 @@ fun NotificationListContent(
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "No notifications",
-                        modifier = Modifier.size(64.dp),
-                        tint = SkyBlue.copy(alpha = 0.5f)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .background(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        SkyBlueLight,
+                                        SkyBlueMedium
+                                    )
+                                ),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "No notifications",
+                            modifier = Modifier.size(48.dp),
+                            tint = SkyBlue
+                        )
+                    }
                     Text(
                         text = "저장된 알림이 없습니다",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = SkyBlueDark.copy(alpha = 0.7f)
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Gray700,
+                        letterSpacing = 0.3.sp
+                    )
+                    Text(
+                        text = "알림이 오면 자동으로 저장됩니다",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Gray500
                     )
                 }
             }
@@ -150,8 +194,8 @@ fun NotificationListContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(notifications) { notification ->
                     NotificationItemCard(notification = notification)
@@ -167,24 +211,55 @@ fun NotificationItemCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(20.dp),
+                spotColor = SkyBlue.copy(alpha = 0.15f)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(20.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.White,
+                            SkyBlueLight.copy(alpha = 0.1f)
+                        )
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    color = Gray300.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(20.dp),
             verticalAlignment = Alignment.Top
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(56.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = CircleShape,
+                        spotColor = SkyBlue.copy(alpha = 0.3f)
+                    )
                     .clip(CircleShape)
-                    .background(SkyBlueLight),
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                SkyBlueLight,
+                                SkyBlueMedium
+                            )
+                        )
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 notification.iconData?.let { iconBytes ->
@@ -192,56 +267,75 @@ fun NotificationItemCard(
                     Image(
                         bitmap = bitmap.asImageBitmap(),
                         contentDescription = "App Icon",
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(36.dp)
                     )
                 } ?: Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Default Icon",
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(28.dp),
                     tint = SkyBlue
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = notification.appName,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     color = SkyBlueDark,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 notification.title?.let { title ->
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 17.sp,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        color = Gray700
                     )
                 }
 
                 notification.content?.let { content ->
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = content,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black.copy(alpha = 0.6f),
+                        color = Gray500,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 20.sp
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Text(
-                    text = DateTimeUtil.formatTimestamp(notification.timestamp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = SkyBlue,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(
+                                color = AccentBlue,
+                                shape = CircleShape
+                            )
+                    )
+                    Text(
+                        text = DateTimeUtil.formatTimestamp(notification.timestamp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = AccentBlue,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = 0.3.sp
+                    )
+                }
             }
         }
     }

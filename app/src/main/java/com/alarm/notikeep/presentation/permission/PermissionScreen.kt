@@ -31,9 +31,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.alarm.notikeep.presentation.theme.BackgroundGray
+import com.alarm.notikeep.presentation.theme.Gray500
+import com.alarm.notikeep.presentation.theme.Gray700
 import com.alarm.notikeep.presentation.theme.SkyBlue
 import com.alarm.notikeep.presentation.theme.SkyBlueDark
 import com.alarm.notikeep.presentation.theme.SkyBlueLight
+import com.alarm.notikeep.presentation.theme.SkyBlueMedium
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun PermissionScreen(
@@ -47,9 +53,12 @@ fun PermissionScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        SkyBlueLight,
+                        SkyBlueMedium.copy(alpha = 0.3f),
+                        BackgroundGray,
                         Color.White
-                    )
+                    ),
+                    startY = 0f,
+                    endY = 2000f
                 )
             ),
         contentAlignment = Alignment.Center
@@ -63,9 +72,19 @@ fun PermissionScreen(
         ) {
             Box(
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(140.dp)
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = CircleShape,
+                        spotColor = SkyBlue.copy(alpha = 0.4f)
+                    )
                     .background(
-                        color = SkyBlue.copy(alpha = 0.2f),
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                SkyBlueLight,
+                                SkyBlueMedium.copy(alpha = 0.8f)
+                            )
+                        ),
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -73,8 +92,8 @@ fun PermissionScreen(
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Notification",
-                    modifier = Modifier.size(64.dp),
-                    tint = SkyBlueDark
+                    modifier = Modifier.size(70.dp),
+                    tint = SkyBlue
                 )
             }
 
@@ -83,26 +102,34 @@ fun PermissionScreen(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = SkyBlueDark
+                color = Gray700,
+                letterSpacing = 0.5.sp
             )
 
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        spotColor = SkyBlue.copy(alpha = 0.2f)
+                    ),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                shape = RoundedCornerShape(16.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                shape = RoundedCornerShape(24.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier.padding(28.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
                     Text(
                         text = "NotiKeep이 알림을 저장하려면",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = SkyBlueDark
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = SkyBlueDark,
+                        letterSpacing = 0.3.sp
                     )
 
                     PermissionStep(
@@ -126,16 +153,23 @@ fun PermissionScreen(
                 onClick = onRequestPermission,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(60.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        spotColor = SkyBlue.copy(alpha = 0.5f)
+                    ),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = SkyBlue
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
                     text = "설정으로 이동",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    letterSpacing = 0.5.sp
                 )
             }
 
@@ -143,15 +177,17 @@ fun PermissionScreen(
                 onClick = onAppExit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(60.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.Gray
+                    contentColor = Gray500
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
                     text = "나중에 하기",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 16.sp,
+                    letterSpacing = 0.3.sp
                 )
             }
         }
@@ -164,21 +200,49 @@ private fun PermissionStep(
     text: String,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Row(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top
     ) {
-        Text(
-            text = "STEP $number",
-            style = MaterialTheme.typography.labelSmall,
-            color = SkyBlue,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.Black.copy(alpha = 0.7f)
-        )
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            SkyBlue,
+                            SkyBlueDark
+                        )
+                    ),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = number,
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = "STEP $number",
+                style = MaterialTheme.typography.labelSmall,
+                color = SkyBlueDark,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Gray700,
+                lineHeight = 22.sp
+            )
+        }
     }
 }
 
