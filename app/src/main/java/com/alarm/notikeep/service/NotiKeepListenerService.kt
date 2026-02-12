@@ -15,6 +15,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
+import androidx.core.graphics.createBitmap
 
 @AndroidEntryPoint
 class NotiKeepListenerService : NotificationListenerService() {
@@ -39,11 +40,7 @@ class NotiKeepListenerService : NotificationListenerService() {
                 val iconData = try {
                     val icon = notification.smallIcon?.loadDrawable(this@NotiKeepListenerService)
                     icon?.let { drawable ->
-                        val bitmap = Bitmap.createBitmap(
-                            drawable.intrinsicWidth,
-                            drawable.intrinsicHeight,
-                            Bitmap.Config.ARGB_8888
-                        )
+                        val bitmap = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
                         val canvas = Canvas(bitmap)
                         drawable.setBounds(0, 0, canvas.width, canvas.height)
                         drawable.draw(canvas)
