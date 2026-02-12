@@ -2,6 +2,7 @@ package com.alarm.notikeep.presentation.notification_list
 
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,29 +16,42 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.alarm.notikeep.domain.model.NotificationItem
+import com.alarm.notikeep.presentation.permission.PermissionScreen
+import com.alarm.notikeep.presentation.theme.SkyBlue
+import com.alarm.notikeep.presentation.theme.SkyBlueDark
+import com.alarm.notikeep.presentation.theme.SkyBlueLight
 import com.alarm.notikeep.util.DateTimeUtil
 
 @Composable
@@ -60,7 +74,7 @@ fun NotificationListScreen(
     }
 
     if (!uiState.hasNotificationPermission) {
-        PermissionRequestScreen(
+        PermissionScreen(
             onRequestPermission = { viewModel.requestPermission() },
             onCheckPermission = { viewModel.checkPermission() }
         )
@@ -72,70 +86,7 @@ fun NotificationListScreen(
     }
 }
 
-@Composable
-fun PermissionRequestScreen(
-    onRequestPermission: () -> Unit,
-    onCheckPermission: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Scaffold(
-        topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "NotiKeep",
-                    style = MaterialTheme.typography.headlineMedium
-                )
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "알림 접근 권한이 필요합니다",
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center
-                )
-
-                Text(
-                    text = "알림을 저장하려면 알림 접근 권한을 허용해주세요.\n\n1. 아래 버튼을 눌러 설정으로 이동\n2. NotiKeep 찾아서 활성화\n3. 뒤로가기로 앱으로 돌아오기",
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    onClick = onRequestPermission,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("설정으로 이동")
-                }
-
-                OutlinedButton(
-                    onClick = onCheckPermission,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("권한 설정 완료")
-                }
-            }
-        }
-    }
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationListContent(
     notifications: List<NotificationItem>,
@@ -144,17 +95,30 @@ fun NotificationListContent(
 ) {
     Scaffold(
         topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "NotiKeep",
-                    style = MaterialTheme.typography.headlineMedium
+            TopAppBar(
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "NotiKeep",
+                            tint = Color.White
+                        )
+                        Text(
+                            text = "NotiKeep",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = SkyBlue
                 )
-            }
-        }
+            )
+        },
+        containerColor = SkyBlueLight.copy(alpha = 0.3f)
     ) { paddingValues ->
         if (notifications.isEmpty()) {
             Box(
@@ -163,19 +127,30 @@ fun NotificationListContent(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "저장된 알림이 없습니다",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "No notifications",
+                        modifier = Modifier.size(64.dp),
+                        tint = SkyBlue.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        text = "저장된 알림이 없습니다",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = SkyBlueDark.copy(alpha = 0.7f)
+                    )
+                }
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(notifications) { notification ->
                     NotificationItemCard(notification = notification)
@@ -192,7 +167,11 @@ fun NotificationItemCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -200,12 +179,25 @@ fun NotificationItemCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.Top
         ) {
-            notification.iconData?.let { iconBytes ->
-                val bitmap = BitmapFactory.decodeByteArray(iconBytes, 0, iconBytes.size)
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "App Icon",
-                    modifier = Modifier.size(40.dp)
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(SkyBlueLight),
+                contentAlignment = Alignment.Center
+            ) {
+                notification.iconData?.let { iconBytes ->
+                    val bitmap = BitmapFactory.decodeByteArray(iconBytes, 0, iconBytes.size)
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "App Icon",
+                        modifier = Modifier.size(32.dp)
+                    )
+                } ?: Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Default Icon",
+                    modifier = Modifier.size(24.dp),
+                    tint = SkyBlue
                 )
             }
 
@@ -215,13 +207,17 @@ fun NotificationItemCard(
                 Text(
                     text = notification.appName,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = SkyBlueDark,
+                    fontWeight = FontWeight.SemiBold
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
 
                 notification.title?.let { title ->
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -231,31 +227,22 @@ fun NotificationItemCard(
                     Text(
                         text = content,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.Black.copy(alpha = 0.6f),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = DateTimeUtil.formatTimestamp(notification.timestamp),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
+                    color = SkyBlue,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PermissionRequestScreenPreview() {
-    MaterialTheme {
-        PermissionRequestScreen(
-            onRequestPermission = {},
-            onCheckPermission = {}
-        )
     }
 }
 
@@ -280,6 +267,14 @@ fun NotificationListContentPreview() {
                     title = "New Message",
                     content = "You have received a new message from John",
                     timestamp = System.currentTimeMillis() - 3600000
+                ),
+                NotificationItem(
+                    id = 3,
+                    packageName = "com.example.email",
+                    appName = "Email",
+                    title = "Important Email",
+                    content = "You have a new email from your manager regarding the project deadline",
+                    timestamp = System.currentTimeMillis() - 7200000
                 )
             ),
             isLoading = false
