@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -57,6 +56,7 @@ import com.alarm.notikeep.presentation.theme.BackgroundGray
 import com.alarm.notikeep.presentation.theme.Gray300
 import com.alarm.notikeep.presentation.theme.Gray500
 import com.alarm.notikeep.presentation.theme.Gray700
+import com.alarm.notikeep.presentation.theme.NotiKeepDimens
 import com.alarm.notikeep.presentation.theme.SkyBlue
 import com.alarm.notikeep.presentation.theme.SkyBlueDark
 import com.alarm.notikeep.presentation.theme.SkyBlueLight
@@ -109,11 +109,11 @@ fun NotificationListContent(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(NotiKeepDimens.Space12)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(NotiKeepDimens.Size36)
                                 .background(
                                     color = Color.White.copy(alpha = 0.2f),
                                     shape = CircleShape
@@ -124,7 +124,7 @@ fun NotificationListContent(
                                 imageVector = Icons.Default.Notifications,
                                 contentDescription = "NotiKeep",
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(NotiKeepDimens.Size20)
                             )
                         }
                         Text(
@@ -152,11 +152,11 @@ fun NotificationListContent(
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(NotiKeepDimens.Space20)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(NotiKeepDimens.Size100)
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
@@ -171,7 +171,7 @@ fun NotificationListContent(
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = "No notifications",
-                            modifier = Modifier.size(48.dp),
+                            modifier = Modifier.size(NotiKeepDimens.Size48),
                             tint = SkyBlue
                         )
                     }
@@ -194,8 +194,11 @@ fun NotificationListContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(
+                        horizontal = NotiKeepDimens.Space20,
+                        vertical = NotiKeepDimens.Space16
+                    ),
+                verticalArrangement = Arrangement.spacedBy(NotiKeepDimens.Space16)
             ) {
                 items(notifications) { notification ->
                     NotificationItemCard(notification = notification)
@@ -214,15 +217,15 @@ fun NotificationItemCard(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 6.dp,
-                shape = RoundedCornerShape(20.dp),
+                elevation = NotiKeepDimens.Elevation6,
+                shape = RoundedCornerShape(NotiKeepDimens.Radius20),
                 spotColor = SkyBlue.copy(alpha = 0.15f)
             ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = NotiKeepDimens.None),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(NotiKeepDimens.Radius20)
     ) {
         Row(
             modifier = Modifier
@@ -236,18 +239,18 @@ fun NotificationItemCard(
                     )
                 )
                 .border(
-                    width = 1.dp,
+                    width = NotiKeepDimens.StrokeThin,
                     color = Gray300.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(NotiKeepDimens.Radius20)
                 )
-                .padding(20.dp),
+                .padding(NotiKeepDimens.Space20),
             verticalAlignment = Alignment.Top
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(NotiKeepDimens.Size56)
                     .shadow(
-                        elevation = 4.dp,
+                        elevation = NotiKeepDimens.Elevation4,
                         shape = CircleShape,
                         spotColor = SkyBlue.copy(alpha = 0.3f)
                     )
@@ -267,17 +270,17 @@ fun NotificationItemCard(
                     Image(
                         bitmap = bitmap.asImageBitmap(),
                         contentDescription = "App Icon",
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(NotiKeepDimens.Size36)
                     )
                 } ?: Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Default Icon",
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(NotiKeepDimens.Size28),
                     tint = SkyBlue
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(NotiKeepDimens.Space16))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -288,7 +291,7 @@ fun NotificationItemCard(
                     letterSpacing = 0.5.sp
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(NotiKeepDimens.Space6))
 
                 notification.title?.let { title ->
                     Text(
@@ -303,7 +306,7 @@ fun NotificationItemCard(
                 }
 
                 notification.content?.let { content ->
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(NotiKeepDimens.Space4))
                     Text(
                         text = content,
                         style = MaterialTheme.typography.bodyMedium,
@@ -314,15 +317,15 @@ fun NotificationItemCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(NotiKeepDimens.Space10))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(NotiKeepDimens.Space6)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(6.dp)
+                            .size(NotiKeepDimens.Size6)
                             .background(
                                 color = AccentBlue,
                                 shape = CircleShape
