@@ -349,7 +349,7 @@ fun NotificationItemCard(
                                     contentDescription = "Attachment Preview",
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(180.dp)
+                                        .height(120.dp)
                                         .clip(RoundedCornerShape(NotiKeepDimens.Radius16)),
                                     contentScale = ContentScale.Crop
                                 )
@@ -365,6 +365,7 @@ fun NotificationItemCard(
                 } else {
                     val titleText = notification.title ?: "(제목 없음)"
                     val contentText = notification.content?.takeIf { it.isNotBlank() }
+                        ?: if (notification.attachmentMimeType?.startsWith("image/") == true) "사진" else null
                     Text(
                         text = buildAnnotatedString {
                             withStyle(
