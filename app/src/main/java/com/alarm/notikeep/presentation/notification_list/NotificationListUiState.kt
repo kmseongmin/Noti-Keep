@@ -5,5 +5,6 @@ import com.alarm.notikeep.domain.model.NotificationItem
 data class NotificationListUiState(
     val notifications: List<NotificationItem> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val hasNotificationPermission: Boolean = false
 )
