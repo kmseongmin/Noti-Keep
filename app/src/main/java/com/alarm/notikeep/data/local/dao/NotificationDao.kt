@@ -13,6 +13,9 @@ interface NotificationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(notification: NotificationEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(notifications: List<NotificationEntity>)
+
     @Query("SELECT * FROM notifications ORDER BY timestamp DESC")
     fun getAllNotifications(): Flow<List<NotificationEntity>>
 
@@ -27,6 +30,9 @@ interface NotificationDao {
 
     @Query("UPDATE notifications SET isRead = 1 WHERE id IN (:ids) AND isRead = 0")
     suspend fun markAsReadByIds(ids: List<Long>)
+
+    @Query("SELECT COUNT(*) FROM notifications")
+    suspend fun getNotificationCount(): Int
 
     @Query("DELETE FROM notifications")
     suspend fun deleteAll()
