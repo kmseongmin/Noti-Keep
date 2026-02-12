@@ -2,6 +2,8 @@ package com.alarm.notikeep.presentation.notification_list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.alarm.notikeep.domain.notification.NotificationClassifier
+import com.alarm.notikeep.domain.repository.NotificationRepository
 import com.alarm.notikeep.domain.usecase.GetAllNotificationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NotificationListViewModel @Inject constructor(
-    private val getAllNotificationsUseCase: GetAllNotificationsUseCase
+    private val getAllNotificationsUseCase: GetAllNotificationsUseCase,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationListUiState())
@@ -21,6 +24,16 @@ class NotificationListViewModel @Inject constructor(
 
     init {
         loadNotifications()
+    }
+
+    fun markThreadAsRead(threadKey: String) {
+        viewModelScope.launch {
+            val targetIds = _uiState.value.notifications
+                .filter { NotificationClassifier.threadKey(it) == threadKey && !it.isRead }
+                .map { it.id }
+
+            notificationRepository.markNotificationsAsRead(targetIds)
+        }
     }
 
     private fun loadNotifications() {

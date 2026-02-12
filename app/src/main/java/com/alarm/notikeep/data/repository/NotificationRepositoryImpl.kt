@@ -1,5 +1,6 @@
 package com.alarm.notikeep.data.repository
 
+import android.util.Log
 import com.alarm.notikeep.data.local.dao.NotificationDao
 import com.alarm.notikeep.data.local.entity.NotificationEntity
 import com.alarm.notikeep.domain.model.NotificationItem
@@ -14,6 +15,10 @@ class NotificationRepositoryImpl @Inject constructor(
 
     override suspend fun saveNotification(notification: NotificationItem) {
         notificationDao.insert(notification.toEntity())
+        Log.d(
+            TAG,
+            "saved: package=${notification.packageName}, title=${notification.title}, content=${notification.content}, timestamp=${notification.timestamp}"
+        )
     }
 
     override fun getAllNotifications(): Flow<List<NotificationItem>> {
@@ -32,6 +37,11 @@ class NotificationRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun markNotificationsAsRead(ids: List<Long>) {
+        if (ids.isEmpty()) return
+        notificationDao.markAsReadByIds(ids)
+    }
+
     override suspend fun deleteNotification(id: Long) {
         notificationDao.deleteById(id)
     }
@@ -46,7 +56,13 @@ class NotificationRepositoryImpl @Inject constructor(
         appName = appName,
         title = title,
         content = content,
+        category = category,
+        conversationKey = conversationKey,
         timestamp = timestamp,
+        isRead = isRead,
+        attachmentData = attachmentData,
+        attachmentMimeType = attachmentMimeType,
+        attachmentFileName = attachmentFileName,
         iconData = iconData
     )
 
@@ -56,7 +72,17 @@ class NotificationRepositoryImpl @Inject constructor(
         appName = appName,
         title = title,
         content = content,
+        category = category,
+        conversationKey = conversationKey,
         timestamp = timestamp,
+        isRead = isRead,
+        attachmentData = attachmentData,
+        attachmentMimeType = attachmentMimeType,
+        attachmentFileName = attachmentFileName,
         iconData = iconData
     )
+
+    companion object {
+        private const val TAG = "NotiKeepSave"
+    }
 }

@@ -8,6 +8,7 @@ interface NotificationRepository {
     fun getAllNotifications(): Flow<List<NotificationItem>>
     suspend fun getNotificationById(id: Long): NotificationItem?
     fun getNotificationsByPackage(packageName: String): Flow<List<NotificationItem>>
+    suspend fun markNotificationsAsRead(ids: List<Long>)
     suspend fun deleteNotification(id: Long)
     suspend fun deleteAllNotifications()
 }
