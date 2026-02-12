@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,9 +42,14 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alarm.notikeep.domain.model.NotificationItem
@@ -60,20 +67,30 @@ import com.alarm.notikeep.util.DateTimeUtil
 
 @Composable
 fun NotificationListScreen(
+    onOpenGroupDetail: (NotificationGroup) -> Unit,
     viewModel: NotificationListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val groups = remember(uiState.notifications) {
+        uiState.notifications.toNotificationGroups()
+    }
+
     NotificationListContent(
-        notifications = uiState.notifications,
-        isLoading = uiState.isLoading
+        groups = groups,
+        isLoading = uiState.isLoading,
+        onOpenGroupDetail = { group ->
+            viewModel.markThreadAsRead(group.threadKey)
+            onOpenGroupDetail(group)
+        }
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationListContent(
-    notifications: List<NotificationItem>,
+    groups: List<NotificationGroup>,
     isLoading: Boolean,
+    onOpenGroupDetail: (NotificationGroup) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -114,9 +131,10 @@ fun NotificationListContent(
                 )
             )
         },
-        containerColor = BackgroundGray
+        containerColor = BackgroundGray,
+        modifier = modifier
     ) { paddingValues ->
-        if (notifications.isEmpty()) {
+        if (groups.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -149,7 +167,7 @@ fun NotificationListContent(
                         )
                     }
                     Text(
-                        text = "저장된 알림이 없습니다",
+                        text = if (isLoading) "알림을 불러오는 중입니다" else "저장된 알림이 없습니다",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         color = Gray700,
@@ -173,8 +191,12 @@ fun NotificationListContent(
                     ),
                 verticalArrangement = Arrangement.spacedBy(NotiKeepDimens.Space16)
             ) {
-                items(notifications) { notification ->
-                    NotificationItemCard(notification = notification)
+                items(groups) { group ->
+                    NotificationGroupCard(
+                        group = group,
+                        isRead = !group.hasUnread,
+                        onClick = { onOpenGroupDetail(group) }
+                    )
                 }
             }
         }
@@ -182,23 +204,57 @@ fun NotificationListContent(
 }
 
 @Composable
+private fun NotificationGroupCard(
+    group: NotificationGroup,
+    isRead: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    NotificationItemCard(
+        notification = NotificationItem(
+            id = 0,
+            packageName = group.packageName,
+            appName = group.appName,
+            title = group.title,
+            content = group.content,
+            isRead = !group.hasUnread,
+            timestamp = group.latestTimestamp,
+            iconData = group.iconData
+        ),
+        isRead = isRead,
+        onClick = onClick,
+        modifier = modifier
+    )
+}
+
+@Composable
 fun NotificationItemCard(
     notification: NotificationItem,
+    isRead: Boolean = false,
+    showFullContent: Boolean = false,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = NotiKeepDimens.Elevation6,
-                shape = RoundedCornerShape(NotiKeepDimens.Radius20),
+                elevation = NotiKeepDimens.Elevation4,
+                shape = RoundedCornerShape(NotiKeepDimens.Radius16),
                 spotColor = SkyBlue.copy(alpha = 0.15f)
-            ),
+            )
+            .let {
+                if (onClick != null) {
+                    it.clickable(onClick = onClick)
+                } else {
+                    it
+                }
+            },
         elevation = CardDefaults.cardElevation(defaultElevation = NotiKeepDimens.None),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-        shape = RoundedCornerShape(NotiKeepDimens.Radius20)
+        shape = RoundedCornerShape(NotiKeepDimens.Radius16)
     ) {
         Row(
             modifier = Modifier
@@ -214,14 +270,14 @@ fun NotificationItemCard(
                 .border(
                     width = NotiKeepDimens.StrokeThin,
                     color = Gray300.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(NotiKeepDimens.Radius20)
+                    shape = RoundedCornerShape(NotiKeepDimens.Radius16)
                 )
-                .padding(NotiKeepDimens.Space20),
-            verticalAlignment = Alignment.Top
+                .padding(NotiKeepDimens.Space12),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(NotiKeepDimens.Size56)
+                    .size(NotiKeepDimens.Size48)
                     .shadow(
                         elevation = NotiKeepDimens.Elevation4,
                         shape = CircleShape,
@@ -243,7 +299,7 @@ fun NotificationItemCard(
                     Image(
                         bitmap = bitmap.asImageBitmap(),
                         contentDescription = "App Icon",
-                        modifier = Modifier.size(NotiKeepDimens.Size36)
+                        modifier = Modifier.size(NotiKeepDimens.Size28)
                     )
                 } ?: Icon(
                     imageVector = Icons.Default.Notifications,
@@ -253,7 +309,7 @@ fun NotificationItemCard(
                 )
             }
 
-            Spacer(modifier = Modifier.width(NotiKeepDimens.Space16))
+            Spacer(modifier = Modifier.width(NotiKeepDimens.Space12))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -261,49 +317,84 @@ fun NotificationItemCard(
                     style = MaterialTheme.typography.labelLarge,
                     color = SkyBlueDark,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
+                    letterSpacing = 0.3.sp
                 )
 
-                Spacer(modifier = Modifier.height(NotiKeepDimens.Space6))
-
-                notification.title?.let { title ->
+                if (showFullContent) {
                     Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
+                        text = notification.title ?: "(제목 없음)",
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 17.sp,
+                        fontSize = 15.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = Gray700
+                        color = Gray700,
                     )
-                }
+                    notification.content?.takeIf { it.isNotBlank() }?.let { content ->
+                        Spacer(modifier = Modifier.height(NotiKeepDimens.Space4))
+                        Text(
+                            text = content,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Gray500
+                        )
+                    }
 
-                notification.content?.let { content ->
-                    Spacer(modifier = Modifier.height(NotiKeepDimens.Space4))
+                    notification.attachmentData?.let { bytes ->
+                        Spacer(modifier = Modifier.height(NotiKeepDimens.Space6))
+                        if (notification.attachmentMimeType?.startsWith("image/") == true) {
+                            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            bitmap?.let {
+                                Image(
+                                    bitmap = it.asImageBitmap(),
+                                    contentDescription = "Attachment Preview",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .clip(RoundedCornerShape(NotiKeepDimens.Radius16)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "첨부파일 저장됨: ${notification.attachmentFileName ?: "unknown"}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Gray500
+                            )
+                        }
+                    }
+                } else {
+                    val titleText = notification.title ?: "(제목 없음)"
+                    val contentText = notification.content?.takeIf { it.isNotBlank() }
                     Text(
-                        text = content,
+                        text = buildAnnotatedString {
+                            withStyle(
+                                SpanStyle(
+                                    color = Gray700,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            ) {
+                                append(titleText)
+                            }
+                            if (contentText != null) {
+                                append(" ")
+                                withStyle(SpanStyle(color = Gray500)) {
+                                    append(contentText)
+                                }
+                            }
+                        },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Gray500,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        lineHeight = 20.sp
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(modifier = Modifier.height(NotiKeepDimens.Space10))
+                Spacer(modifier = Modifier.height(NotiKeepDimens.Space6))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(NotiKeepDimens.Space6)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(NotiKeepDimens.Size6)
-                            .background(
-                                color = AccentBlue,
-                                shape = CircleShape
-                            )
-                    )
                     Text(
                         text = DateTimeUtil.formatTimestamp(notification.timestamp),
                         style = MaterialTheme.typography.labelMedium,
@@ -311,6 +402,16 @@ fun NotificationItemCard(
                         fontWeight = FontWeight.Medium,
                         letterSpacing = 0.3.sp
                     )
+                    if (!isRead) {
+                        Box(
+                            modifier = Modifier
+                                .size(NotiKeepDimens.Size6)
+                                .background(
+                                    color = AccentBlue,
+                                    shape = CircleShape
+                                )
+                        )
+                    }
                 }
             }
         }
@@ -322,33 +423,32 @@ fun NotificationItemCard(
 fun NotificationListContentPreview() {
     MaterialTheme {
         NotificationListContent(
-            notifications = listOf(
-                NotificationItem(
-                    id = 1,
+            groups = listOf(
+                NotificationGroup(
+                    threadKey = "com.example.app::test notification",
                     packageName = "com.example.app",
                     appName = "Example App",
                     title = "Test Notification",
                     content = "This is a test notification content",
-                    timestamp = System.currentTimeMillis()
+                    latestTimestamp = System.currentTimeMillis(),
+                    iconData = null,
+                    totalCount = 3,
+                    hasUnread = true
                 ),
-                NotificationItem(
-                    id = 2,
-                    packageName = "com.example.messenger",
-                    appName = "Messenger",
-                    title = "New Message",
-                    content = "You have received a new message from John",
-                    timestamp = System.currentTimeMillis() - 3600000
-                ),
-                NotificationItem(
-                    id = 3,
+                NotificationGroup(
+                    threadKey = "com.example.email::important email",
                     packageName = "com.example.email",
                     appName = "Email",
                     title = "Important Email",
                     content = "You have a new email from your manager regarding the project deadline",
-                    timestamp = System.currentTimeMillis() - 7200000
+                    latestTimestamp = System.currentTimeMillis() - 7200000,
+                    iconData = null,
+                    totalCount = 1,
+                    hasUnread = false
                 )
             ),
-            isLoading = false
+            isLoading = false,
+            onOpenGroupDetail = {}
         )
     }
 }
@@ -358,8 +458,9 @@ fun NotificationListContentPreview() {
 fun NotificationListContentEmptyPreview() {
     MaterialTheme {
         NotificationListContent(
-            notifications = emptyList(),
-            isLoading = false
+            groups = emptyList(),
+            isLoading = false,
+            onOpenGroupDetail = {}
         )
     }
 }
