@@ -33,8 +33,8 @@ fun NavGraph() {
             AppDetailScreen(
                 onBack = { navController.popBackStack() },
                 onConversationClick = { packageName, conversationKey ->
-                    val p = URLEncoder.encode(packageName, "UTF-8")
-                    val k = URLEncoder.encode(conversationKey, "UTF-8")
+                    val p = URLEncoder.encode(packageName, "UTF-8").replace("+", "%20")
+                    val k = URLEncoder.encode(conversationKey, "UTF-8").replace("+", "%20")
                     navController.navigate("conversation/$p/$k")
                 }
             )

@@ -1,14 +1,18 @@
 package com.android.notikeep.presentation.conversation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -24,10 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.android.notikeep.domain.model.AppNotification
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -75,13 +83,21 @@ fun ConversationContent(uiState: ConversationUiState, onBack: () -> Unit) {
 
 @Composable
 fun MessageBubble(notification: AppNotification) {
-    Box(
+    val isGroupChat = notification.subText?.isNotBlank() == true
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.CenterStart
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
     ) {
-        Column(modifier = Modifier.widthIn(max = 280.dp)) {
-            // 단톡방이면 버블 위에 보낸 사람 이름 표시
-            if (notification.subText?.isNotBlank() == true) {
+        // 프로필 아이콘 (단톡방 또는 프로필 이미지가 있을 때)
+        if (isGroupChat || notification.senderIconPath != null) {
+            SenderIcon(
+                senderIconPath = notification.senderIconPath,
+                senderName = notification.title
+            )
+        }
+        Column(modifier = Modifier.widthIn(max = 260.dp)) {
+            if (isGroupChat) {
                 Text(
                     text = notification.title,
                     style = MaterialTheme.typography.labelSmall,
@@ -105,6 +121,36 @@ fun MessageBubble(notification: AppNotification) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun SenderIcon(senderIconPath: String?, senderName: String) {
+    val iconFile = senderIconPath?.let { File(it) }
+    if (iconFile != null && iconFile.exists()) {
+        AsyncImage(
+            model = iconFile,
+            contentDescription = senderName,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        // 이니셜 폴백
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = senderName.take(1),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     }

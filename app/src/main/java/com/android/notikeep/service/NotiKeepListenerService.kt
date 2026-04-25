@@ -1,5 +1,9 @@
 package com.android.notikeep.service
 
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -12,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -43,6 +48,8 @@ class NotiKeepListenerService : NotificationListenerService() {
             ).toString()
         }.getOrDefault(sbn.packageName)
 
+        val senderIconPath = saveLargeIcon(sbn)
+
         val notification = AppNotification(
             packageName = sbn.packageName,
             appName = appName,
@@ -50,7 +57,8 @@ class NotiKeepListenerService : NotificationListenerService() {
             content = content,
             subText = subText,
             category = sbn.notification.category,
-            receivedAt = sbn.postTime
+            receivedAt = sbn.postTime,
+            senderIconPath = senderIconPath
         )
 
         Log.d(TAG, """
@@ -86,12 +94,37 @@ class NotiKeepListenerService : NotificationListenerService() {
         }
     }
 
+    private fun saveLargeIcon(sbn: StatusBarNotification): String? {
+        return runCatching {
+            val icon: Icon = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                sbn.notification.getLargeIcon() ?: return null
+            } else {
+                return null
+            }
+            val drawable = icon.loadDrawable(this) ?: return null
+            val bitmap = (drawable as? BitmapDrawable)?.bitmap ?: return null
+
+            // title을 기반으로 발신자별 파일명 생성 (동일 발신자는 덮어씀)
+            val safeTitle = sbn.notification.extras.getString("android.title")
+                ?.replace(Regex("[^a-zA-Z0-9가-힣]"), "_")
+                ?.take(40)
+                ?: return null
+            val dir = File(filesDir, "profiles/${sbn.packageName}")
+            dir.mkdirs()
+            val file = File(dir, "$safeTitle.png")
+            file.outputStream().use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 90, out)
+            }
+            file.absolutePath
+        }.getOrNull()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
     }
 
     companion object {
-        private const val TAG = "NotiKeep"
+        private const val TAG = "NotiKeepService"
     }
 }

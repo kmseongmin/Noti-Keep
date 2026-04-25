@@ -3,14 +3,17 @@ package com.android.notikeep.presentation.home
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -36,7 +39,11 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(uiState = uiState, onAppClick = onAppClick)
+    HomeContent(
+        uiState = uiState,
+        onAppClick = onAppClick,
+        onFilterSelect = viewModel::setFilter
+    )
 }
 
 // Stateless
@@ -44,7 +51,8 @@ fun HomeScreen(
 @Composable
 fun HomeContent(
     uiState: HomeUiState,
-    onAppClick: (packageName: String) -> Unit
+    onAppClick: (packageName: String) -> Unit,
+    onFilterSelect: (NotificationFilter) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -59,9 +67,34 @@ fun HomeContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            item {
+                FilterChipRow(
+                    selectedFilter = uiState.selectedFilter,
+                    onFilterSelect = onFilterSelect
+                )
+            }
             items(uiState.appGroups, key = { it.packageName }) { group ->
                 AppGroupItem(group = group, onClick = { onAppClick(group.packageName) })
             }
+        }
+    }
+}
+
+@Composable
+fun FilterChipRow(
+    selectedFilter: NotificationFilter,
+    onFilterSelect: (NotificationFilter) -> Unit
+) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(NotificationFilter.entries) { filter ->
+            FilterChip(
+                selected = selectedFilter == filter,
+                onClick = { onFilterSelect(filter) },
+                label = { Text(filter.label) }
+            )
         }
     }
 }
@@ -93,8 +126,8 @@ fun AppGroupItem(group: AppGroup, onClick: () -> Unit) {
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    if (group.count > 1) {
-                        Badge { Text(group.count.toString()) }
+                    if (group.unreadCount > 0) {
+                        Badge { Text(group.unreadCount.toString()) }
                     }
                 }
                 Text(

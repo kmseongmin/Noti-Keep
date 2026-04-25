@@ -14,7 +14,9 @@ data class NotificationEntity(
     val content: String,
     val subText: String?,
     val category: String?,
-    val receivedAt: Long
+    val receivedAt: Long,
+    val isRead: Boolean = false,
+    val senderIconPath: String? = null
 ) {
     fun toDomain() = AppNotification(
         id = id,
@@ -24,7 +26,9 @@ data class NotificationEntity(
         content = content,
         subText = subText,
         category = category,
-        receivedAt = receivedAt
+        receivedAt = receivedAt,
+        isRead = isRead,
+        senderIconPath = senderIconPath
     )
 
     companion object {
@@ -36,7 +40,9 @@ data class NotificationEntity(
             content = n.content,
             subText = n.subText,
             category = n.category,
-            receivedAt = n.receivedAt
+            receivedAt = n.receivedAt,
+            isRead = n.isRead,
+            senderIconPath = n.senderIconPath
         )
     }
 }

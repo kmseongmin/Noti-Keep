@@ -7,6 +7,7 @@ interface NotificationRepository {
     fun getNotifications(): Flow<List<AppNotification>>
     fun getNotificationsByApp(packageName: String): Flow<List<AppNotification>>
     fun getNotificationsByConversation(packageName: String, conversationKey: String): Flow<List<AppNotification>>
+    suspend fun markAppAsRead(packageName: String)
     suspend fun saveNotification(notification: AppNotification)
     suspend fun deleteNotification(notification: AppNotification)
 }

@@ -28,6 +28,9 @@ interface NotificationDao {
     """)
     fun getNotificationsByConversation(packageName: String, conversationKey: String): Flow<List<NotificationEntity>>
 
+    @Query("UPDATE notifications SET isRead = 1 WHERE packageName = :packageName")
+    suspend fun markAppAsRead(packageName: String)
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNotification(notification: NotificationEntity)
 
