@@ -1,7 +1,8 @@
 package com.android.notikeep.presentation.appdetail
 
 import android.app.Notification
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -34,6 +36,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.android.notikeep.presentation.ui.component.SelectionActionBar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -51,7 +54,12 @@ fun AppDetailScreen(
         uiState = uiState,
         conversations = conversations,
         onBack = onBack,
-        onConversationClick = onConversationClick
+        onConversationClick = onConversationClick,
+        onItemClick = viewModel::onItemClick,
+        onItemLongClick = viewModel::onItemLongClick,
+        onSelectAll = viewModel::selectAll,
+        onDeleteSelected = viewModel::deleteSelected,
+        onClearSelection = viewModel::clearSelection
     )
 }
 
@@ -62,14 +70,25 @@ fun AppDetailContent(
     uiState: AppDetailUiState,
     conversations: LazyPagingItems<ConversationGroup>,
     onBack: () -> Unit,
-    onConversationClick: (packageName: String, conversationKey: String) -> Unit
+    onConversationClick: (packageName: String, conversationKey: String) -> Unit,
+    onItemClick: (conversationKey: String) -> Unit,
+    onItemLongClick: (conversationKey: String) -> Unit,
+    onSelectAll: () -> Unit,
+    onDeleteSelected: () -> Unit,
+    onClearSelection: () -> Unit
 ) {
+    BackHandler(enabled = uiState.isSelectionMode) {
+        onClearSelection()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(uiState.appName) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        if (uiState.isSelectionMode) onClearSelection() else onBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 }
@@ -81,6 +100,17 @@ fun AppDetailContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            if (uiState.isSelectionMode) {
+                item {
+                    SelectionActionBar(
+                        selectedCount = uiState.selectedConversationKeys.size,
+                        isAllSelected = uiState.isAllSelected,
+                        onToggleSelectAll = onSelectAll,
+                        onDeleteSelected = onDeleteSelected,
+                        onClearSelection = onClearSelection
+                    )
+                }
+            }
             items(
                 count = conversations.itemCount,
                 key = conversations.itemKey { it.conversationKey }
@@ -90,14 +120,23 @@ fun AppDetailContent(
                 ConversationGroupItem(
                     conversation = conversation,
                     isMessaging = isMessaging,
+                    isSelectionMode = uiState.isSelectionMode,
+                    isSelected = uiState.selectedConversationKeys.contains(conversation.conversationKey),
                     onClick = if (isMessaging) {
                         {
-                            onConversationClick(
-                                conversation.latest.packageName,
-                                conversation.conversationKey
-                            )
+                            if (uiState.isSelectionMode) {
+                                onItemClick(conversation.conversationKey)
+                            } else {
+                                onConversationClick(
+                                    conversation.latest.packageName,
+                                    conversation.conversationKey
+                                )
+                            }
                         }
-                    } else null
+                    } else if (uiState.isSelectionMode) {
+                        { onItemClick(conversation.conversationKey) }
+                    } else null,
+                    onLongClick = { onItemLongClick(conversation.conversationKey) }
                 )
             }
 
@@ -118,11 +157,17 @@ fun AppDetailContent(
 fun ConversationGroupItem(
     conversation: ConversationGroup,
     isMessaging: Boolean,
-    onClick: (() -> Unit)?
+    isSelectionMode: Boolean,
+    isSelected: Boolean,
+    onClick: (() -> Unit)?,
+    onLongClick: () -> Unit
 ) {
     val modifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+        .combinedClickable(
+            onClick = { onClick?.invoke() },
+            onLongClick = onLongClick
+        )
         .padding(horizontal = 16.dp, vertical = 10.dp)
 
     Column(modifier = modifier) {
@@ -136,12 +181,15 @@ fun ConversationGroupItem(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
+                if (isSelectionMode) {
+                    Checkbox(checked = isSelected, onCheckedChange = { onClick?.invoke() })
+                }
                 Text(
                     text = conversation.conversationKey,
                     style = MaterialTheme.typography.bodyMedium
                 )
-                if (conversation.count > 1) {
-                    Badge { Text(conversation.count.toString()) }
+                if (conversation.unreadCount > 0) {
+                    Badge { Text(conversation.unreadCount.toString()) }
                 }
             }
             Row(

@@ -52,7 +52,8 @@ class NotificationRepositoryImpl @Inject constructor(
                     latestSubText = row.latestSubText,
                     latestCategory = row.latestCategory,
                     latestReceivedAt = row.latestReceivedAt,
-                    count = row.count
+                    count = row.count,
+                    unreadCount = row.unreadCount
                 )
             }
         }
@@ -71,8 +72,30 @@ class NotificationRepositoryImpl @Inject constructor(
     override fun getLatestAppName(packageName: String): Flow<String?> =
         dao.getLatestAppName(packageName)
 
+    override suspend fun getAllPackageNames(category: String?): List<String> =
+        dao.getAllPackageNames(category)
+
+    override suspend fun getAllConversationKeysByApp(packageName: String): List<String> =
+        dao.getAllConversationKeysByApp(packageName)
+
+    override suspend fun getAllNotificationIdsByConversation(
+        packageName: String,
+        conversationKey: String
+    ): List<Long> = dao.getAllNotificationIdsByConversation(packageName, conversationKey)
+
     override suspend fun markAppAsRead(packageName: String) =
         dao.markAppAsRead(packageName)
+
+    override suspend fun deleteNotificationsByPackages(packageNames: List<String>) =
+        dao.deleteNotificationsByPackages(packageNames)
+
+    override suspend fun deleteNotificationsByConversations(
+        packageName: String,
+        conversationKeys: List<String>
+    ) = dao.deleteNotificationsByConversations(packageName, conversationKeys)
+
+    override suspend fun deleteNotificationsByIds(ids: List<Long>) =
+        dao.deleteNotificationsByIds(ids)
 
     override suspend fun saveNotification(notification: AppNotification) =
         dao.insertNotification(NotificationEntity.fromDomain(notification))

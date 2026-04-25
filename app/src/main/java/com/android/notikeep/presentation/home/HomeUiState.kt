@@ -13,5 +13,8 @@ data class AppGroup(
 
 data class HomeUiState(
     val selectedFilter: NotificationFilter = NotificationFilter.ALL,
+    val isSelectionMode: Boolean = false,
+    val isAllSelected: Boolean = false,
+    val selectedPackageNames: Set<String> = emptySet(),
     val isLoading: Boolean = false
 )

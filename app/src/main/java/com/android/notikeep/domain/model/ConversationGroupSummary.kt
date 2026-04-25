@@ -9,5 +9,6 @@ data class ConversationGroupSummary(
     val latestSubText: String?,
     val latestCategory: String?,
     val latestReceivedAt: Long,
-    val count: Int
+    val count: Int,
+    val unreadCount: Int
 )

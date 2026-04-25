@@ -1,6 +1,6 @@
 package com.android.notikeep.presentation.home
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Badge
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -33,6 +35,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.android.notikeep.presentation.ui.component.AppIcon
+import com.android.notikeep.presentation.ui.component.SelectionActionBar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -49,7 +52,12 @@ fun HomeScreen(
         uiState = uiState,
         appGroups = appGroups,
         onAppClick = onAppClick,
-        onFilterSelect = viewModel::setFilter
+        onFilterSelect = viewModel::setFilter,
+        onItemClick = viewModel::onItemClick,
+        onItemLongClick = viewModel::onItemLongClick,
+        onSelectAll = viewModel::selectAll,
+        onDeleteSelected = viewModel::deleteSelected,
+        onClearSelection = viewModel::clearSelection
     )
 }
 
@@ -60,8 +68,17 @@ fun HomeContent(
     uiState: HomeUiState,
     appGroups: LazyPagingItems<AppGroup>,
     onAppClick: (packageName: String) -> Unit,
-    onFilterSelect: (NotificationFilter) -> Unit
+    onFilterSelect: (NotificationFilter) -> Unit,
+    onItemClick: (packageName: String) -> Unit,
+    onItemLongClick: (packageName: String) -> Unit,
+    onSelectAll: () -> Unit,
+    onDeleteSelected: () -> Unit,
+    onClearSelection: () -> Unit
 ) {
+    BackHandler(enabled = uiState.isSelectionMode) {
+        onClearSelection()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -75,6 +92,17 @@ fun HomeContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            if (uiState.isSelectionMode) {
+                item {
+                    SelectionActionBar(
+                        selectedCount = uiState.selectedPackageNames.size,
+                        isAllSelected = uiState.isAllSelected,
+                        onToggleSelectAll = onSelectAll,
+                        onDeleteSelected = onDeleteSelected,
+                        onClearSelection = onClearSelection
+                    )
+                }
+            }
             item {
                 FilterChipRow(
                     selectedFilter = uiState.selectedFilter,
@@ -86,7 +114,16 @@ fun HomeContent(
                 key = appGroups.itemKey { it.packageName }
             ) { index ->
                 val group = appGroups[index] ?: return@items
-                AppGroupItem(group = group, onClick = { onAppClick(group.packageName) })
+                AppGroupItem(
+                    group = group,
+                    isSelectionMode = uiState.isSelectionMode,
+                    isSelected = uiState.selectedPackageNames.contains(group.packageName),
+                    onClick = {
+                        if (uiState.isSelectionMode) onItemClick(group.packageName)
+                        else onAppClick(group.packageName)
+                    },
+                    onLongClick = { onItemLongClick(group.packageName) }
+                )
             }
 
             if (appGroups.loadState.append is LoadState.Loading) {
@@ -122,15 +159,24 @@ fun FilterChipRow(
 }
 
 @Composable
-fun AppGroupItem(group: AppGroup, onClick: () -> Unit) {
+fun AppGroupItem(
+    group: AppGroup,
+    isSelectionMode: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (isSelectionMode) {
+            Checkbox(checked = isSelected, onCheckedChange = { onClick() })
+        }
         AppIcon(packageName = group.packageName)
 
         Column(modifier = Modifier.weight(1f)) {

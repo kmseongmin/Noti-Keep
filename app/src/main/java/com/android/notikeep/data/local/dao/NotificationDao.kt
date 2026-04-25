@@ -80,6 +80,24 @@ interface NotificationDao {
                     END
                 )
             ) AS count
+            ,
+            (
+                SELECT COUNT(*)
+                FROM notifications c
+                WHERE c.packageName = :packageName
+                AND c.isRead = 0
+                AND (
+                    CASE
+                        WHEN c.subText IS NOT NULL AND c.subText != '' THEN c.subText
+                        ELSE c.title
+                    END
+                ) = (
+                    CASE
+                        WHEN n.subText IS NOT NULL AND n.subText != '' THEN n.subText
+                        ELSE n.title
+                    END
+                )
+            ) AS unreadCount
         FROM notifications n
         WHERE n.packageName = :packageName
         AND n.id = (
@@ -123,8 +141,69 @@ interface NotificationDao {
     @Query("SELECT appName FROM notifications WHERE packageName = :packageName ORDER BY receivedAt DESC, id DESC LIMIT 1")
     fun getLatestAppName(packageName: String): Flow<String?>
 
+    @Query(
+        """
+        SELECT DISTINCT packageName
+        FROM notifications
+        WHERE (:category IS NULL OR category = :category)
+        """
+    )
+    suspend fun getAllPackageNames(category: String?): List<String>
+
+    @Query(
+        """
+        SELECT DISTINCT
+            CASE
+                WHEN subText IS NOT NULL AND subText != '' THEN subText
+                ELSE title
+            END AS conversationKey
+        FROM notifications
+        WHERE packageName = :packageName
+        """
+    )
+    suspend fun getAllConversationKeysByApp(packageName: String): List<String>
+
+    @Query(
+        """
+        SELECT id
+        FROM notifications
+        WHERE packageName = :packageName
+        AND (
+            (subText IS NOT NULL AND subText = :conversationKey) OR
+            (subText IS NULL AND title = :conversationKey)
+        )
+        """
+    )
+    suspend fun getAllNotificationIdsByConversation(
+        packageName: String,
+        conversationKey: String
+    ): List<Long>
+
     @Query("UPDATE notifications SET isRead = 1 WHERE packageName = :packageName")
     suspend fun markAppAsRead(packageName: String)
+
+    @Query("DELETE FROM notifications WHERE packageName IN (:packageNames)")
+    suspend fun deleteNotificationsByPackages(packageNames: List<String>)
+
+    @Query(
+        """
+        DELETE FROM notifications
+        WHERE packageName = :packageName
+        AND (
+            CASE
+                WHEN subText IS NOT NULL AND subText != '' THEN subText
+                ELSE title
+            END
+        ) IN (:conversationKeys)
+        """
+    )
+    suspend fun deleteNotificationsByConversations(
+        packageName: String,
+        conversationKeys: List<String>
+    )
+
+    @Query("DELETE FROM notifications WHERE id IN (:ids)")
+    suspend fun deleteNotificationsByIds(ids: List<Long>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNotification(notification: NotificationEntity)

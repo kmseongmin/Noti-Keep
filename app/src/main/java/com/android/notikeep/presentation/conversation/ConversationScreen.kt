@@ -1,6 +1,8 @@
 package com.android.notikeep.presentation.conversation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +43,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.android.notikeep.domain.model.AppNotification
+import com.android.notikeep.presentation.ui.component.SelectionActionBar
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -53,7 +57,16 @@ fun ConversationScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val notifications = viewModel.notifications.collectAsLazyPagingItems()
-    ConversationContent(uiState = uiState, notifications = notifications, onBack = onBack)
+    ConversationContent(
+        uiState = uiState,
+        notifications = notifications,
+        onBack = onBack,
+        onItemClick = viewModel::onItemClick,
+        onItemLongClick = viewModel::onItemLongClick,
+        onSelectAll = viewModel::selectAll,
+        onDeleteSelected = viewModel::deleteSelected,
+        onClearSelection = viewModel::clearSelection
+    )
 }
 
 // Stateless
@@ -62,14 +75,25 @@ fun ConversationScreen(
 fun ConversationContent(
     uiState: ConversationUiState,
     notifications: LazyPagingItems<AppNotification>,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onItemClick: (Long) -> Unit,
+    onItemLongClick: (Long) -> Unit,
+    onSelectAll: () -> Unit,
+    onDeleteSelected: () -> Unit,
+    onClearSelection: () -> Unit
 ) {
+    BackHandler(enabled = uiState.isSelectionMode) {
+        onClearSelection()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(uiState.title) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        if (uiState.isSelectionMode) onClearSelection() else onBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 }
@@ -84,12 +108,31 @@ fun ConversationContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             reverseLayout = true
         ) {
+            if (uiState.isSelectionMode) {
+                item {
+                    SelectionActionBar(
+                        selectedCount = uiState.selectedNotificationIds.size,
+                        isAllSelected = uiState.isAllSelected,
+                        onToggleSelectAll = onSelectAll,
+                        onDeleteSelected = onDeleteSelected,
+                        onClearSelection = onClearSelection
+                    )
+                }
+            }
             items(
                 count = notifications.itemCount,
                 key = notifications.itemKey { it.id }
             ) { index ->
                 val notification = notifications[index] ?: return@items
-                MessageBubble(notification = notification)
+                MessageBubble(
+                    notification = notification,
+                    isSelectionMode = uiState.isSelectionMode,
+                    isSelected = uiState.selectedNotificationIds.contains(notification.id),
+                    onClick = {
+                        if (uiState.isSelectionMode) onItemClick(notification.id)
+                    },
+                    onLongClick = { onItemLongClick(notification.id) }
+                )
             }
 
             if (notifications.loadState.append is LoadState.Loading) {
@@ -106,13 +149,28 @@ fun ConversationContent(
 }
 
 @Composable
-fun MessageBubble(notification: AppNotification) {
+fun MessageBubble(
+    notification: AppNotification,
+    isSelectionMode: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
     val isGroupChat = notification.subText?.isNotBlank() == true
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top
     ) {
+        if (isSelectionMode) {
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onClick() },
+                modifier = Modifier.padding(top = 6.dp)
+            )
+        }
         // 프로필 아이콘 (단톡방 또는 프로필 이미지가 있을 때)
         if (isGroupChat || notification.senderIconPath != null) {
             SenderIcon(
