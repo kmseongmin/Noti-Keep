@@ -43,6 +43,9 @@ com.android.notikeep
 - DB 접근은 Flow 사용
 - 주석은 한국어로 작성
 
+## UI 규칙
+- 공통 컴포넌트분리
+
 ## Compose State Hoisting 규칙
 - 상태는 항상 사용하는 컴포저블 중 가장 상위로 끌어올릴 것
 - 컴포저블은 상태를 직접 소유하지 않고 state + event lambda를 파라미터로 받을 것
