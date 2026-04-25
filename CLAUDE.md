@@ -27,9 +27,9 @@ com.android.notikeep
 │   ├── repository/
 │   └── usecase/
 └── presentation
-    ├── ui/
-    │   └── (screen별 패키지)
-    └── viewmodel/
+    ├── theme/
+    └── {피처}/          ← Screen, ViewModel, UiState 피처별로 묶음
+        └── note/
 ```
 
 ## 코딩 규칙
