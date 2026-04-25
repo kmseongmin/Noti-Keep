@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -27,6 +28,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.android.notikeep.presentation.ui.component.AppIcon
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -39,8 +44,10 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val appGroups = viewModel.appGroups.collectAsLazyPagingItems()
     HomeContent(
         uiState = uiState,
+        appGroups = appGroups,
         onAppClick = onAppClick,
         onFilterSelect = viewModel::setFilter
     )
@@ -51,6 +58,7 @@ fun HomeScreen(
 @Composable
 fun HomeContent(
     uiState: HomeUiState,
+    appGroups: LazyPagingItems<AppGroup>,
     onAppClick: (packageName: String) -> Unit,
     onFilterSelect: (NotificationFilter) -> Unit
 ) {
@@ -73,8 +81,22 @@ fun HomeContent(
                     onFilterSelect = onFilterSelect
                 )
             }
-            items(uiState.appGroups, key = { it.packageName }) { group ->
+            items(
+                count = appGroups.itemCount,
+                key = appGroups.itemKey { it.packageName }
+            ) { index ->
+                val group = appGroups[index] ?: return@items
                 AppGroupItem(group = group, onClick = { onAppClick(group.packageName) })
+            }
+
+            if (appGroups.loadState.append is LoadState.Loading) {
+                item { PagingLoadingItem() }
+            }
+            if (appGroups.loadState.prepend is LoadState.Loading) {
+                item { PagingLoadingItem() }
+            }
+            if (appGroups.loadState.refresh is LoadState.Loading) {
+                item { PagingLoadingItem() }
             }
         }
     }
@@ -131,20 +153,20 @@ fun AppGroupItem(group: AppGroup, onClick: () -> Unit) {
                     }
                 }
                 Text(
-                    text = formatTime(group.latest.receivedAt),
+                    text = formatTime(group.latestReceivedAt),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )
             }
             Text(
-                text = group.latest.title,
+                text = group.latestTitle,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 2.dp)
             )
             Text(
-                text = group.latest.content,
+                text = group.latestContent,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -158,3 +180,15 @@ fun AppGroupItem(group: AppGroup, onClick: () -> Unit) {
 
 private fun formatTime(millis: Long): String =
     SimpleDateFormat("MM.dd HH:mm", Locale.getDefault()).format(Date(millis))
+
+@Composable
+private fun PagingLoadingItem() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}

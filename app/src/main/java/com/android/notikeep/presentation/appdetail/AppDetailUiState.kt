@@ -10,6 +10,5 @@ data class ConversationGroup(
 
 data class AppDetailUiState(
     val appName: String = "",
-    val conversations: List<ConversationGroup> = emptyList(),
     val isLoading: Boolean = false
 )

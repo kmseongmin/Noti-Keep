@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Badge
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -29,6 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,7 +46,13 @@ fun AppDetailScreen(
     viewModel: AppDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    AppDetailContent(uiState = uiState, onBack = onBack, onConversationClick = onConversationClick)
+    val conversations = viewModel.conversations.collectAsLazyPagingItems()
+    AppDetailContent(
+        uiState = uiState,
+        conversations = conversations,
+        onBack = onBack,
+        onConversationClick = onConversationClick
+    )
 }
 
 // Stateless
@@ -49,6 +60,7 @@ fun AppDetailScreen(
 @Composable
 fun AppDetailContent(
     uiState: AppDetailUiState,
+    conversations: LazyPagingItems<ConversationGroup>,
     onBack: () -> Unit,
     onConversationClick: (packageName: String, conversationKey: String) -> Unit
 ) {
@@ -69,7 +81,11 @@ fun AppDetailContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            items(uiState.conversations, key = { it.conversationKey }) { conversation ->
+            items(
+                count = conversations.itemCount,
+                key = conversations.itemKey { it.conversationKey }
+            ) { index ->
+                val conversation = conversations[index] ?: return@items
                 val isMessaging = conversation.latest.category == Notification.CATEGORY_MESSAGE
                 ConversationGroupItem(
                     conversation = conversation,
@@ -83,6 +99,16 @@ fun AppDetailContent(
                         }
                     } else null
                 )
+            }
+
+            if (conversations.loadState.append is LoadState.Loading) {
+                item { PagingLoadingItem() }
+            }
+            if (conversations.loadState.prepend is LoadState.Loading) {
+                item { PagingLoadingItem() }
+            }
+            if (conversations.loadState.refresh is LoadState.Loading) {
+                item { PagingLoadingItem() }
             }
         }
     }
@@ -157,3 +183,15 @@ fun ConversationGroupItem(
 
 private fun formatTime(millis: Long): String =
     SimpleDateFormat("MM.dd HH:mm", Locale.getDefault()).format(Date(millis))
+
+@Composable
+private fun PagingLoadingItem() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}

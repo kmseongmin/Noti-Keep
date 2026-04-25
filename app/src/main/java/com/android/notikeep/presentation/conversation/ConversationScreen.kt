@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +34,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.android.notikeep.domain.model.AppNotification
 import java.io.File
@@ -47,13 +52,18 @@ fun ConversationScreen(
     viewModel: ConversationViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    ConversationContent(uiState = uiState, onBack = onBack)
+    val notifications = viewModel.notifications.collectAsLazyPagingItems()
+    ConversationContent(uiState = uiState, notifications = notifications, onBack = onBack)
 }
 
 // Stateless
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConversationContent(uiState: ConversationUiState, onBack: () -> Unit) {
+fun ConversationContent(
+    uiState: ConversationUiState,
+    notifications: LazyPagingItems<AppNotification>,
+    onBack: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -74,8 +84,22 @@ fun ConversationContent(uiState: ConversationUiState, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             reverseLayout = true
         ) {
-            items(uiState.notifications, key = { it.id }) { notification ->
+            items(
+                count = notifications.itemCount,
+                key = notifications.itemKey { it.id }
+            ) { index ->
+                val notification = notifications[index] ?: return@items
                 MessageBubble(notification = notification)
+            }
+
+            if (notifications.loadState.append is LoadState.Loading) {
+                item { PagingLoadingItem() }
+            }
+            if (notifications.loadState.prepend is LoadState.Loading) {
+                item { PagingLoadingItem() }
+            }
+            if (notifications.loadState.refresh is LoadState.Loading) {
+                item { PagingLoadingItem() }
             }
         }
     }
@@ -158,3 +182,15 @@ fun SenderIcon(senderIconPath: String?, senderName: String) {
 
 private fun formatTime(millis: Long): String =
     SimpleDateFormat("MM.dd HH:mm", Locale.getDefault()).format(Date(millis))
+
+@Composable
+private fun PagingLoadingItem() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
