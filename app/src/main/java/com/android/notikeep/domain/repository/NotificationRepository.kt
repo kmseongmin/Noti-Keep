@@ -18,6 +18,7 @@ interface NotificationRepository {
     suspend fun getAllConversationKeysByApp(packageName: String): List<String>
     suspend fun getAllNotificationIdsByConversation(packageName: String, conversationKey: String): List<Long>
     suspend fun markAppAsRead(packageName: String)
+    suspend fun markConversationAsRead(packageName: String, conversationKey: String)
     suspend fun deleteNotificationsByPackages(packageNames: List<String>)
     suspend fun deleteNotificationsByConversations(packageName: String, conversationKeys: List<String>)
     suspend fun deleteNotificationsByIds(ids: List<Long>)

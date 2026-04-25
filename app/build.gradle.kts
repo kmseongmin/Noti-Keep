@@ -11,6 +11,15 @@ android {
     namespace = "com.android.notikeep"
     compileSdk = 36
 
+    val releaseAdmobAppId =
+        providers.gradleProperty("ADMOB_APP_ID_RELEASE")
+            .orElse("ca-app-pub-3940256099942544~3347511713")
+            .get()
+    val releaseBannerAdUnitId =
+        providers.gradleProperty("ADMOB_BANNER_AD_UNIT_ID_RELEASE")
+            .orElse("ca-app-pub-3940256099942544/6300978111")
+            .get()
+
     defaultConfig {
         applicationId = "com.android.notikeep"
         minSdk = 24
@@ -22,8 +31,29 @@ android {
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+            buildConfigField(
+                "String",
+                "ADMOB_BANNER_AD_UNIT_ID",
+                "\"ca-app-pub-3940256099942544/6300978111\""
+            )
+            buildConfigField("boolean", "USE_TEST_ADS", "true")
+        }
+
         release {
             isMinifyEnabled = false
+            manifestPlaceholders["admobAppId"] = releaseAdmobAppId
+            buildConfigField(
+                "String",
+                "ADMOB_BANNER_AD_UNIT_ID",
+                "\"$releaseBannerAdUnitId\""
+            )
+            buildConfigField(
+                "boolean",
+                "USE_TEST_ADS",
+                if (releaseBannerAdUnitId == "ca-app-pub-3940256099942544/6300978111") "true" else "false"
+            )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -88,6 +118,9 @@ dependencies {
 
     // Coil
     implementation(libs.coil.compose)
+
+    // Ads
+    implementation(libs.play.services.ads)
 
     // Test
     testImplementation(libs.junit)

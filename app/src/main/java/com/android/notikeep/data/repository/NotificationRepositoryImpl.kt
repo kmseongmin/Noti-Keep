@@ -86,6 +86,9 @@ class NotificationRepositoryImpl @Inject constructor(
     override suspend fun markAppAsRead(packageName: String) =
         dao.markAppAsRead(packageName)
 
+    override suspend fun markConversationAsRead(packageName: String, conversationKey: String) =
+        dao.markConversationAsRead(packageName, conversationKey)
+
     override suspend fun deleteNotificationsByPackages(packageNames: List<String>) =
         dao.deleteNotificationsByPackages(packageNames)
 

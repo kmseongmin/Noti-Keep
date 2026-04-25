@@ -6,7 +6,11 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,8 +18,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.app.NotificationManagerCompat
 import com.android.notikeep.presentation.navigation.NavGraph
+import com.android.notikeep.presentation.ui.component.BottomAdBanner
 import com.android.notikeep.presentation.ui.component.NotificationPermissionDialog
 import com.android.notikeep.presentation.ui.theme.NotiKeepTheme
+import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,19 +32,31 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        MobileAds.initialize(this)
         setContent {
             NotiKeepTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    NavGraph()
+                    Scaffold(
+                        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                        bottomBar = { BottomAdBanner() }
+                    ) { innerPadding ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                        ) {
+                            NavGraph()
 
-                    if (showPermissionDialog) {
-                        NotificationPermissionDialog(
-                            onConfirm = {
-                                showPermissionDialog = false
-                                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                            },
-                            onDismiss = { showPermissionDialog = false }
-                        )
+                            if (showPermissionDialog) {
+                                NotificationPermissionDialog(
+                                    onConfirm = {
+                                        showPermissionDialog = false
+                                        startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                                    },
+                                    onDismiss = { showPermissionDialog = false }
+                                )
+                            }
+                        }
                     }
                 }
             }

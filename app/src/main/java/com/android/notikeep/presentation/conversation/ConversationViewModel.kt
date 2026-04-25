@@ -8,6 +8,7 @@ import androidx.paging.cachedIn
 import com.android.notikeep.domain.usecase.DeleteNotificationsByIdsUseCase
 import com.android.notikeep.domain.usecase.GetAllNotificationIdsByConversationUseCase
 import com.android.notikeep.domain.usecase.GetNotificationsByConversationUseCase
+import com.android.notikeep.domain.usecase.MarkConversationAsReadUseCase
 import com.android.notikeep.presentation.navigation.ConversationRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,8 @@ class ConversationViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getNotificationsByConversationUseCase: GetNotificationsByConversationUseCase,
     private val getAllNotificationIdsByConversationUseCase: GetAllNotificationIdsByConversationUseCase,
-    private val deleteNotificationsByIdsUseCase: DeleteNotificationsByIdsUseCase
+    private val deleteNotificationsByIdsUseCase: DeleteNotificationsByIdsUseCase,
+    private val markConversationAsReadUseCase: MarkConversationAsReadUseCase
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<ConversationRoute>()
@@ -35,6 +37,7 @@ class ConversationViewModel @Inject constructor(
         .cachedIn(viewModelScope)
 
     init {
+        viewModelScope.launch { markConversationAsReadUseCase(packageName, conversationKey) }
         _uiState.value = ConversationUiState(title = conversationKey, isLoading = false)
     }
 

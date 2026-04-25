@@ -11,7 +11,6 @@ import com.android.notikeep.domain.usecase.DeleteNotificationsByConversationsUse
 import com.android.notikeep.domain.usecase.GetAllConversationKeysByAppUseCase
 import com.android.notikeep.domain.usecase.GetNotificationsByAppUseCase
 import com.android.notikeep.domain.usecase.GetLatestAppNameUseCase
-import com.android.notikeep.domain.usecase.MarkAppAsReadUseCase
 import com.android.notikeep.presentation.navigation.AppDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +27,6 @@ class AppDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getNotificationsByAppUseCase: GetNotificationsByAppUseCase,
     private val getLatestAppNameUseCase: GetLatestAppNameUseCase,
-    private val markAppAsReadUseCase: MarkAppAsReadUseCase,
     private val getAllConversationKeysByAppUseCase: GetAllConversationKeysByAppUseCase,
     private val deleteNotificationsByConversationsUseCase: DeleteNotificationsByConversationsUseCase
 ) : ViewModel() {
@@ -60,8 +58,6 @@ class AppDetailViewModel @Inject constructor(
         .cachedIn(viewModelScope)
 
     init {
-        viewModelScope.launch { markAppAsReadUseCase(packageName) }
-
         getLatestAppNameUseCase(packageName)
             .onEach { appName ->
                 _uiState.value = _uiState.value.copy(

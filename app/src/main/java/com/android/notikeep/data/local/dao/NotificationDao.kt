@@ -182,6 +182,19 @@ interface NotificationDao {
     @Query("UPDATE notifications SET isRead = 1 WHERE packageName = :packageName")
     suspend fun markAppAsRead(packageName: String)
 
+    @Query(
+        """
+        UPDATE notifications
+        SET isRead = 1
+        WHERE packageName = :packageName
+        AND (
+            (subText IS NOT NULL AND subText = :conversationKey) OR
+            (subText IS NULL AND title = :conversationKey)
+        )
+        """
+    )
+    suspend fun markConversationAsRead(packageName: String, conversationKey: String)
+
     @Query("DELETE FROM notifications WHERE packageName IN (:packageNames)")
     suspend fun deleteNotificationsByPackages(packageNames: List<String>)
 
