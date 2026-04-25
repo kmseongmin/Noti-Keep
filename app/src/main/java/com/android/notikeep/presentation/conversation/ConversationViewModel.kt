@@ -3,8 +3,10 @@ package com.android.notikeep.presentation.conversation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import androidx.paging.cachedIn
 import com.android.notikeep.domain.usecase.GetNotificationsByConversationUseCase
+import com.android.notikeep.presentation.navigation.ConversationRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,8 +19,9 @@ class ConversationViewModel @Inject constructor(
     private val getNotificationsByConversationUseCase: GetNotificationsByConversationUseCase
 ) : ViewModel() {
 
-    private val packageName: String = checkNotNull(savedStateHandle["packageName"])
-    private val conversationKey: String = checkNotNull(savedStateHandle["conversationKey"])
+    private val route = savedStateHandle.toRoute<ConversationRoute>()
+    private val packageName: String = route.packageName
+    private val conversationKey: String = route.conversationKey
 
     private val _uiState = MutableStateFlow(ConversationUiState(isLoading = true))
     val uiState: StateFlow<ConversationUiState> = _uiState.asStateFlow()

@@ -3,12 +3,14 @@ package com.android.notikeep.presentation.appdetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.android.notikeep.domain.model.AppNotification
 import com.android.notikeep.domain.usecase.GetNotificationsByAppUseCase
 import com.android.notikeep.domain.usecase.GetLatestAppNameUseCase
 import com.android.notikeep.domain.usecase.MarkAppAsReadUseCase
+import com.android.notikeep.presentation.navigation.AppDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +29,7 @@ class AppDetailViewModel @Inject constructor(
     private val markAppAsReadUseCase: MarkAppAsReadUseCase
 ) : ViewModel() {
 
-    private val packageName: String = checkNotNull(savedStateHandle["packageName"])
+    private val packageName: String = savedStateHandle.toRoute<AppDetailRoute>().packageName
 
     private val _uiState = MutableStateFlow(AppDetailUiState(isLoading = true))
     val uiState: StateFlow<AppDetailUiState> = _uiState.asStateFlow()
