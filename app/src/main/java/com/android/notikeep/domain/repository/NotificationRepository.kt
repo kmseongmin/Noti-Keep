@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface NotificationRepository {
     fun getNotifications(): Flow<List<AppNotification>>
+    fun getNotificationsByApp(packageName: String): Flow<List<AppNotification>>
+    fun getNotificationsByConversation(packageName: String, title: String): Flow<List<AppNotification>>
     suspend fun saveNotification(notification: AppNotification)
     suspend fun deleteNotification(notification: AppNotification)
 }

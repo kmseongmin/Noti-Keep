@@ -13,6 +13,12 @@ interface NotificationDao {
     @Query("SELECT * FROM notifications ORDER BY receivedAt DESC")
     fun getNotifications(): Flow<List<NotificationEntity>>
 
+    @Query("SELECT * FROM notifications WHERE packageName = :packageName ORDER BY receivedAt DESC")
+    fun getNotificationsByApp(packageName: String): Flow<List<NotificationEntity>>
+
+    @Query("SELECT * FROM notifications WHERE packageName = :packageName AND title = :title ORDER BY receivedAt DESC")
+    fun getNotificationsByConversation(packageName: String, title: String): Flow<List<NotificationEntity>>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNotification(notification: NotificationEntity)
 

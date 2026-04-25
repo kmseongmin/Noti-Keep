@@ -13,7 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.app.NotificationManagerCompat
-import com.android.notikeep.presentation.home.HomeScreen
+import com.android.notikeep.presentation.navigation.NavGraph
 import com.android.notikeep.presentation.ui.component.NotificationPermissionDialog
 import com.android.notikeep.presentation.ui.theme.NotiKeepTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             NotiKeepTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    HomeScreen()
+                    NavGraph()
 
                     if (showPermissionDialog) {
                         NotificationPermissionDialog(

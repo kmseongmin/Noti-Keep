@@ -22,7 +22,19 @@ class HomeViewModel @Inject constructor(
 
     init {
         getNotificationsUseCase()
-            .map { HomeUiState(notifications = it) }
+            .map { notifications ->
+                val groups = notifications
+                    .groupBy { it.packageName }
+                    .map { (_, group) ->
+                        AppGroup(
+                            packageName = group.first().packageName,
+                            appName = group.first().appName,
+                            latest = group.first(), // receivedAt DESC 정렬이므로 첫 번째가 최신
+                            count = group.size
+                        )
+                    }
+                HomeUiState(appGroups = groups)
+            }
             .onEach { newState -> _uiState.value = newState }
             .launchIn(viewModelScope)
     }

@@ -13,20 +13,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.android.notikeep.domain.model.AppNotification
 
 // Stateful
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    onAppClick: (packageName: String) -> Unit,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    HomeContent(notifications = uiState.notifications)
+    HomeContent(uiState = uiState, onAppClick = onAppClick)
 }
 
 // Stateless
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeContent(notifications: List<AppNotification>) {
+fun HomeContent(
+    uiState: HomeUiState,
+    onAppClick: (packageName: String) -> Unit
+) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("알림 목록") }) }
     ) { innerPadding ->
@@ -35,8 +40,8 @@ fun HomeContent(notifications: List<AppNotification>) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            items(notifications, key = { it.id }) { notification ->
-                NotificationListItem(notification = notification)
+            items(uiState.appGroups, key = { it.packageName }) { group ->
+                AppGroupItem(group = group, onClick = { onAppClick(group.packageName) })
             }
         }
     }

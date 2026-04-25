@@ -15,6 +15,12 @@ class NotificationRepositoryImpl @Inject constructor(
     override fun getNotifications(): Flow<List<AppNotification>> =
         dao.getNotifications().map { list -> list.map { it.toDomain() } }
 
+    override fun getNotificationsByApp(packageName: String): Flow<List<AppNotification>> =
+        dao.getNotificationsByApp(packageName).map { list -> list.map { it.toDomain() } }
+
+    override fun getNotificationsByConversation(packageName: String, title: String): Flow<List<AppNotification>> =
+        dao.getNotificationsByConversation(packageName, title).map { list -> list.map { it.toDomain() } }
+
     override suspend fun saveNotification(notification: AppNotification) =
         dao.insertNotification(NotificationEntity.fromDomain(notification))
 
